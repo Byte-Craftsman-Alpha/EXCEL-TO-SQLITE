@@ -26,6 +26,16 @@
       {% block content %}{% endblock %}
     </div>
 
+    <div id="sx-loader" class="sx-loader hidden" aria-hidden="true">
+      <div class="sx-loader-card">
+        <div class="sx-spinner" aria-hidden="true"></div>
+        <div>
+          <div class="text-sm font-semibold text-slate-900">Working…</div>
+          <div class="text-xs text-slate-500">Loading data and rendering results</div>
+        </div>
+      </div>
+    </div>
+
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
 </html>

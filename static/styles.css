@@ -69,3 +69,105 @@
   background: #ffffff;
   color: #334155;
 }
+
+.sx-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: min(60vh, calc(100vh - 340px));
+  overscroll-behavior: contain;
+}
+
+.sx-table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sx-table th,
+.sx-table td {
+  max-width: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sx-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sx-th {
+  position: relative;
+}
+
+.sx-th-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sx-th-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sx-col-resizer {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 22px;
+  cursor: col-resize;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.sx-col-resizer:hover,
+.sx-col-resizer:focus {
+  outline: none;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.sx-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(248, 250, 252, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.sx-loader-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 260px;
+}
+
+.sx-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #6366f1;
+  animation: sx-spin 0.75s linear infinite;
+}
+
+@keyframes sx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

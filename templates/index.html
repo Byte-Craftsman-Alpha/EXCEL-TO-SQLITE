@@ -9,7 +9,7 @@
       </div>
       <p class="text-sm text-slate-500 mt-1">Upload an Excel file to build an in-memory SQLite database.</p>
 
-      <form class="mt-4 space-y-3" action="{{ url_for('ui.upload') }}" method="post" enctype="multipart/form-data">
+      <form class="mt-4 space-y-3" action="{{ url_for('ui.upload') }}" method="post" enctype="multipart/form-data" data-show-loader="true">
         <input class="minimal-input w-full" type="file" name="file" accept=".xlsx,.xls" required />
         <button class="minimal-btn minimal-btn-primary w-full" type="submit">
           <span class="iconify" data-icon="solar:upload-bold" data-width="18"></span>
@@ -64,7 +64,7 @@
         </div>
         <p class="text-sm text-slate-500 mt-1">Run a SQL query against the in-memory database.</p>
 
-        <form class="mt-4 space-y-3" action="{{ url_for('ui.run_query') }}" method="post">
+        <form class="mt-4 space-y-3" action="{{ url_for('ui.run_query') }}" method="post" data-show-loader="true">
           <textarea class="minimal-input w-full font-mono text-sm" name="sql" rows="5" placeholder="Write SQL here...">{{ default_query }}</textarea>
           <button class="minimal-btn minimal-btn-primary" type="submit" {% if not has_db %}disabled{% endif %}>
             <span class="iconify" data-icon="solar:play-bold" data-width="18"></span>
@@ -120,12 +120,17 @@
                   </div>
                 </div>
 
-                <div class="mt-3 overflow-auto border border-slate-200 rounded-2xl">
-                  <table class="w-full text-sm" id="table_{{ loop.index0 }}">
+                <div class="mt-3 sx-table-wrap border border-slate-200 rounded-2xl">
+                  <table class="sx-table w-full text-sm" id="table_{{ loop.index0 }}">
                     <thead class="bg-slate-50 text-slate-700">
                       <tr>
                         {% for c in item.columns %}
-                          <th class="text-left p-3 font-semibold">{{ c }}</th>
+                          <th class="sx-th text-left p-3 font-semibold" data-col-idx="{{ loop.index0 }}">
+                            <div class="sx-th-inner">
+                              <span class="sx-th-label">{{ c }}</span>
+                              <span class="sx-col-resizer" role="separator" aria-orientation="vertical" tabindex="0"></span>
+                            </div>
+                          </th>
                         {% endfor %}
                       </tr>
                     </thead>
