@@ -70,12 +70,49 @@
   color: #334155;
 }
 
+:root {
+  --sx-table-vh-offset: 340px;
+}
+
+@media (min-width: 1024px) {
+  html,
+  body {
+    width: 100dvw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .sx-app {
+    width: 100dvw;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+
+  .sx-app-main {
+    overflow: hidden;
+  }
+
+  /* No scrolling areas on desktop: clip overflow instead */
+  .sx-table-wrap {
+    max-height: none;
+    overflow: hidden;
+  }
+
+  /* Ensure tables never exceed the viewport/card width on desktop */
+  .sx-table {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
 .sx-table-wrap {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  max-height: min(60vh, calc(100vh - 340px));
+  max-height: min(60vh, calc(100vh - var(--sx-table-vh-offset)));
   overscroll-behavior: contain;
 }
 

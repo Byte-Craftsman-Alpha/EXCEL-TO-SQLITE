@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <div class="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 h-full">
     <aside class="minimal-card p-5">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900">Database</h2>
@@ -56,7 +56,7 @@
       {% endif %}
     </aside>
 
-    <main class="space-y-6">
+    <main class="space-y-6 flex flex-col h-full">
       <section class="minimal-card p-5">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-slate-900">SQL Query</h2>
@@ -76,10 +76,10 @@
         </form>
       </section>
 
-      <section class="minimal-card p-5">
+      <section class="minimal-card p-5 flex-1 overflow-hidden">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold text-slate-900">History</h2>
-          <span class="text-xs text-slate-500">Newest first</span>
+          <span class="text-xs text-slate-500">Newest first{% if history|length > 1 %} · {{ history|length }} total{% endif %}</span>
         </div>
 
         {% if history|length == 0 %}
@@ -87,7 +87,7 @@
         {% endif %}
 
         <div class="mt-4 space-y-5">
-          {% for item in history %}
+          {% for item in history[:1] %}
             <div class="minimal-card p-4 {% if item.error %}border-rose-200 bg-rose-50{% else %}border-emerald-200 bg-white{% endif %}">
               <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
@@ -116,7 +116,12 @@
                   <div class="text-sm font-medium text-slate-900">Result</div>
                   <div class="flex items-center gap-2">
                     <input class="minimal-input text-sm" type="text" placeholder="Quick search in result..." data-table-search="table_{{ loop.index0 }}" />
-                    <span class="text-xs text-slate-500">{{ item.rows|length }} rows</span>
+                    <span class="text-xs text-slate-500">
+                      {{ item.rows|length }} rows
+                      {% if item.rows|length > 15 %}
+                        · showing first 15
+                      {% endif %}
+                    </span>
                   </div>
                 </div>
 
@@ -135,7 +140,7 @@
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                      {% for r in item.rows %}
+                      {% for r in item.rows[:15] %}
                         <tr class="bg-white hover:bg-slate-50">
                           {% for v in r %}
                             <td class="p-3 text-slate-700">{{ v }}</td>

@@ -96,12 +96,43 @@ function saveColWidths(tableId, widths) {
   }
 }
 
+function isDesktopNoScroll() {
+  return window.matchMedia && window.matchMedia("(min-width: 1024px)").matches;
+}
+
 function applyColWidth(table, colIdx, px) {
   const selector = `th[data-col-idx='${colIdx}'], tbody tr td:nth-child(${colIdx + 1})`;
+  const desktopFit = isDesktopNoScroll();
   table.querySelectorAll(selector).forEach((cell) => {
     cell.style.width = `${px}px`;
-    cell.style.minWidth = `${px}px`;
+    if (!desktopFit) cell.style.minWidth = `${px}px`;
+    else cell.style.minWidth = "";
     cell.style.maxWidth = `${px}px`;
+  });
+}
+
+function fitColumnsToContainer(table, preferredWidths) {
+  const ths = Array.from(table.querySelectorAll("thead th[data-col-idx]"));
+  if (ths.length === 0) return;
+  const wrap = table.closest(".sx-table-wrap");
+  const wrapWidth = wrap ? wrap.getBoundingClientRect().width : table.getBoundingClientRect().width;
+  if (!wrapWidth || !Number.isFinite(wrapWidth)) return;
+
+  const min = 60;
+  const maxPerCol = Math.max(min, Math.floor(wrapWidth / 2));
+  const base = ths.map((th, i) => {
+    const idx = parseInt(th.getAttribute("data-col-idx") || String(i), 10);
+    const w = preferredWidths && preferredWidths[idx] ? preferredWidths[idx] : th.getBoundingClientRect().width;
+    return Math.min(maxPerCol, Math.max(min, Math.floor(w || min)));
+  });
+
+  const sum = base.reduce((a, b) => a + b, 0);
+  const target = Math.max(min * ths.length, Math.floor(wrapWidth) - 6);
+  const scale = sum > 0 ? Math.min(1, target / sum) : 1;
+
+  base.forEach((w, i) => {
+    const next = Math.max(min, Math.floor(w * scale));
+    applyColWidth(table, i, next);
   });
 }
 
@@ -131,11 +162,21 @@ function wireColumnResize() {
 
     initAutoWidths(table);
 
+    if (isDesktopNoScroll()) {
+      const preferred = {};
+      Object.keys(saved).forEach((k) => {
+        const idx = parseInt(k, 10);
+        const px = parseInt(saved[k], 10);
+        if (Number.isFinite(idx) && Number.isFinite(px)) preferred[idx] = px;
+      });
+      fitColumnsToContainer(table, preferred);
+    }
+
     Object.keys(saved).forEach((k) => {
       const idx = parseInt(k, 10);
       const px = parseInt(saved[k], 10);
       if (!Number.isFinite(idx) || !Number.isFinite(px)) return;
-      applyColWidth(table, idx, px);
+      if (!isDesktopNoScroll()) applyColWidth(table, idx, px);
     });
 
     const resizers = Array.from(table.querySelectorAll("thead th[data-col-idx] .sx-col-resizer"));
@@ -151,7 +192,13 @@ function wireColumnResize() {
 
         const startWidth = th.getBoundingClientRect().width;
         const min = 90;
-        const max = 4000;
+        const desktopFit = isDesktopNoScroll();
+        let max = 4000;
+        if (desktopFit) {
+          const wrap = table.closest(".sx-table-wrap");
+          const wrapWidth = wrap ? wrap.getBoundingClientRect().width : table.getBoundingClientRect().width;
+          max = Math.max(min + 40, Math.floor(wrapWidth) - 20);
+        }
 
         const onMove = (moveEv) => {
           const x = moveEv.clientX ?? (moveEv.touches && moveEv.touches[0]?.clientX);
