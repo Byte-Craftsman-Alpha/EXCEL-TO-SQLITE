@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+    <aside class="minimal-card p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900">Database</h2>
+        <span class="iconify text-slate-400" data-icon="solar:database-bold" data-width="20"></span>
+      </div>
+      <p class="text-sm text-slate-500 mt-1">Upload an Excel file to build an in-memory SQLite database.</p>
+
+      <form class="mt-4 space-y-3" action="{{ url_for('ui.upload') }}" method="post" enctype="multipart/form-data">
+        <input class="minimal-input w-full" type="file" name="file" accept=".xlsx,.xls" required />
+        <button class="minimal-btn minimal-btn-primary w-full" type="submit">
+          <span class="iconify" data-icon="solar:upload-bold" data-width="18"></span>
+          Upload & Load
+        </button>
+      </form>
+
+      {% if has_db %}
+        <div class="mt-6">
+          <a class="minimal-btn w-full justify-center" href="{{ url_for('ui.download_database_sql') }}">
+            <span class="iconify" data-icon="solar:download-bold" data-width="18"></span>
+            Download DB (.sql)
+          </a>
+
+          <div class="flex items-center justify-between mb-2 mt-6">
+            <h3 class="text-sm font-semibold text-slate-900">Schema</h3>
+            <span class="text-xs text-slate-500">{{ table_names|length }} tables</span>
+          </div>
+
+          <div class="space-y-3">
+            {% for table, cols in schema.items() %}
+              <details class="minimal-card p-4">
+                <summary class="cursor-pointer flex items-center justify-between">
+                  <span class="font-medium text-slate-900">{{ table }}</span>
+                  <span class="text-xs text-slate-500">{{ cols|length }} cols</span>
+                </summary>
+                <div class="mt-3 space-y-2">
+                  {% for _, name, dtype, notnull, _, _ in cols %}
+                    <div class="border-b border-slate-200 pb-2">
+                      <div class="text-sm font-medium text-slate-900">{{ name }}</div>
+                      <div class="text-xs text-slate-500">Type: {{ dtype }} · {{ 'NOT NULL' if notnull else 'NULLABLE' }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </details>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="mt-6 minimal-card p-4 bg-slate-50">
+          <div class="text-sm text-slate-700">No database loaded yet.</div>
+          <div class="text-xs text-slate-500 mt-1">Upload an Excel file to start querying.</div>
+        </div>
+      {% endif %}
+    </aside>
+
+    <main class="space-y-6">
+      <section class="minimal-card p-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">SQL Query</h2>
+          <span class="iconify text-slate-400" data-icon="solar:code-bold" data-width="20"></span>
+        </div>
+        <p class="text-sm text-slate-500 mt-1">Run a SQL query against the in-memory database.</p>
+
+        <form class="mt-4 space-y-3" action="{{ url_for('ui.run_query') }}" method="post">
+          <textarea class="minimal-input w-full font-mono text-sm" name="sql" rows="5" placeholder="Write SQL here...">{{ default_query }}</textarea>
+          <button class="minimal-btn minimal-btn-primary" type="submit" {% if not has_db %}disabled{% endif %}>
+            <span class="iconify" data-icon="solar:play-bold" data-width="18"></span>
+            Run Query
+          </button>
+          {% if not has_db %}
+            <div class="text-xs text-slate-500">Upload an Excel file to enable queries.</div>
+          {% endif %}
+        </form>
+      </section>
+
+      <section class="minimal-card p-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-900">History</h2>
+          <span class="text-xs text-slate-500">Newest first</span>
+        </div>
+
+        {% if history|length == 0 %}
+          <div class="mt-3 text-sm text-slate-500">No queries yet.</div>
+        {% endif %}
+
+        <div class="mt-4 space-y-5">
+          {% for item in history %}
+            <div class="minimal-card p-4 {% if item.error %}border-rose-200 bg-rose-50{% else %}border-emerald-200 bg-white{% endif %}">
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <div class="text-xs uppercase tracking-wider text-slate-500">Query</div>
+                  <pre class="mt-2 bg-slate-950 text-slate-100 p-3 rounded-xl overflow-auto text-xs">{{ item.query }}</pre>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  {% if not item.error %}
+                    <a class="minimal-btn" href="{{ url_for('ui.download_result_csv', idx=loop.index0) }}">
+                      <span class="iconify" data-icon="solar:download-bold" data-width="18"></span>
+                      CSV
+                    </a>
+                  {% endif %}
+                  <button class="minimal-btn" type="button" data-copy-target="copy_{{ loop.index0 }}">
+                    <span class="iconify" data-icon="solar:copy-bold" data-width="18"></span>
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {% if item.error %}
+                <div class="mt-3 text-sm text-rose-700">{{ item.error }}</div>
+                <textarea class="hidden" id="copy_{{ loop.index0 }}">Query:\n{{ item.query }}\n\nError:\n{{ item.error }}</textarea>
+              {% else %}
+                <div class="mt-4 flex items-center justify-between gap-4">
+                  <div class="text-sm font-medium text-slate-900">Result</div>
+                  <div class="flex items-center gap-2">
+                    <input class="minimal-input text-sm" type="text" placeholder="Quick search in result..." data-table-search="table_{{ loop.index0 }}" />
+                    <span class="text-xs text-slate-500">{{ item.rows|length }} rows</span>
+                  </div>
+                </div>
+
+                <div class="mt-3 overflow-auto border border-slate-200 rounded-2xl">
+                  <table class="w-full text-sm" id="table_{{ loop.index0 }}">
+                    <thead class="bg-slate-50 text-slate-700">
+                      <tr>
+                        {% for c in item.columns %}
+                          <th class="text-left p-3 font-semibold">{{ c }}</th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      {% for r in item.rows %}
+                        <tr class="bg-white hover:bg-slate-50">
+                          {% for v in r %}
+                            <td class="p-3 text-slate-700">{{ v }}</td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+
+                <textarea class="hidden" id="copy_{{ loop.index0 }}">Query:\n{{ item.query }}\n\nResult (CSV):\n{% for c in item.columns %}{{ c }}{% if not loop.last %},{% endif %}{% endfor %}\n{% for r in item.rows %}{% for v in r %}{{ v }}{% if not loop.last %},{% endif %}{% endfor %}\n{% endfor %}</textarea>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </div>
+{% endblock %}

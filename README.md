@@ -1,6 +1,7 @@
-# SQL Explorer (Excel to SQL via Streamlit)
 
-SQL Explorer lets you upload an Excel workbook and run ad-hoc SQL queries against its sheets (loaded into an in-memory SQLite DB) using a Streamlit web UI.
+# SQL Explorer (Excel to SQL via Flask)
+
+SQL Explorer lets you upload an Excel workbook and run ad-hoc SQL queries against its sheets (loaded into an in-memory SQLite DB) using a Flask web UI.
 
 ## Features
 - Upload `.xlsx` / `.xls` files
@@ -32,10 +33,10 @@ pip install -r requirements.txt
 3. Run the app:
 
 ```bash
-streamlit run app.py
+python wsgi.py
 ```
 
-4. Open the URL printed by Streamlit (usually http://localhost:8501).
+4. Open http://127.0.0.1:5000.
 
 ## Notes
 - For `.xlsx` files the app uses `openpyxl` via pandas. For older `.xls` files `xlrd` is used.
